@@ -40,10 +40,43 @@ section{scroll-margin-top:30px}.services{padding:50px 0 56px}.section-mark{width
 <section class="cta wrap" id="contacts"><h2>Запишитесь на приём<br>уже сегодня</h2><button class="button" id="openModal">Записаться на приём →</button></section>
 </main>
 <footer class="wrap"><div class="footer"><a class="brand" href="#top"><span>DentalStudio</span></a><nav class="footer-links"><a href="#services">Услуги</a><a href="#about">О клинике</a><a href="#contacts">Контакты</a></nav></div><div class="copyright">© 2026 DentalStudio. Все права защищены.</div></footer>
-<div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal"><button class="close" id="closeModal" aria-label="Закрыть">×</button><h2 id="modalTitle">Запись на приём</h2><p>Оставьте контактные данные. Форма пока работает как демонстрационный макет и не отправляет заявку в клинику.</p><form id="bookingForm"><label class="field"><span>Ваше имя</span><input name="name" autocomplete="name" placeholder="Как к вам обращаться" required></label><label class="field"><span>Телефон</span><input name="phone" type="tel" autocomplete="tel" placeholder="+7 (___) ___-__-__" required></label><label class="field"><span>Комментарий (необязательно)</span><textarea name="comment" placeholder="Удобное время или вопрос"></textarea></label><button class="button" type="submit">Отправить заявку</button><div class="notice" id="notice">Это демонстрационная форма. Чтобы получать реальные заявки, её нужно подключить к почте или таблице.</div></form></div></div>
+<div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="modal"><button class="close" id="closeModal" aria-label="Закрыть">×</button><h2 id="modalTitle">Запись на приём</h2><p>Оставьте контактные данные, и администратор клиники свяжется с вами.</p><form id="bookingForm"><label class="field"><span>Ваше имя</span><input name="name" autocomplete="name" placeholder="Как к вам обращаться" required></label><label class="field"><span>Телефон</span><input name="phone" type="tel" autocomplete="tel" placeholder="+7 (___) ___-__-__" required></label><label class="field"><span>Услуга</span><select name="service"><option value="">Пока не определился(ась)</option><option>Терапевтическая стоматология</option><option>Имплантация</option><option>Ортодонтия</option></select></label><label class="field"><span>Комментарий (необязательно)</span><textarea name="comment" placeholder="Удобное время или вопрос"></textarea></label><button class="button" id="submitButton" type="submit">Отправить заявку</button><div class="notice" id="notice" role="status"></div></form></div></div>
 <script>
 const menuToggle=document.getElementById('menuToggle'),nav=document.getElementById('nav');menuToggle.addEventListener('click',()=>{const isOpen=nav.classList.toggle('open');menuToggle.setAttribute('aria-expanded',String(isOpen));menuToggle.textContent=isOpen?'×':'☰'});nav.querySelectorAll('a').forEach(link=>link.addEventListener('click',()=>{nav.classList.remove('open');menuToggle.setAttribute('aria-expanded','false');menuToggle.textContent='☰'}));
-const backdrop=document.getElementById('modalBackdrop'),openModal=()=>backdrop.classList.add('open'),closeModal=()=>backdrop.classList.remove('open');document.getElementById('openModal').addEventListener('click',openModal);document.querySelectorAll('[data-book]').forEach(link=>link.addEventListener('click',event=>{event.preventDefault();openModal()}));document.getElementById('closeModal').addEventListener('click',closeModal);backdrop.addEventListener('click',event=>{if(event.target===backdrop)closeModal()});document.addEventListener('keydown',event=>{if(event.key==='Escape')closeModal()});document.getElementById('bookingForm').addEventListener('submit',event=>{event.preventDefault();document.getElementById('notice').classList.add('show')});
+const backdrop=document.getElementById('modalBackdrop'),openModal=()=>backdrop.classList.add('open'),closeModal=()=>backdrop.classList.remove('open');document.getElementById('openModal').addEventListener('click',openModal);document.querySelectorAll('[data-book]').forEach(link=>link.addEventListener('click',event=>{event.preventDefault();openModal()}));document.getElementById('closeModal').addEventListener('click',closeModal);backdrop.addEventListener('click',event=>{if(event.target===backdrop)closeModal()});document.addEventListener('keydown',event=>{if(event.key==='Escape')closeModal()});const bookingForm=document.getElementById('bookingForm');
+bookingForm.addEventListener('submit',async event=>{
+  event.preventDefault();
+  const submitButton=document.getElementById('submitButton');
+  const notice=document.getElementById('notice');
+  const formData=new FormData(bookingForm);
+  const payload={
+    name:String(formData.get('name')||'').trim(),
+    phone:String(formData.get('phone')||'').trim(),
+    service:String(formData.get('service')||''),
+    comment:String(formData.get('comment')||'').trim()
+  };
+  if(!payload.name||!payload.phone)return;
+  submitButton.disabled=true;
+  submitButton.textContent='Отправляем…';
+  notice.classList.remove('show');
+  try{
+    await fetch('https://script.google.com/macros/s/AKfycbzuWg6GmnTq__pN9aF0fJe4LWISUWtMdSIap3AzjtfNLQF2QtD7cpH6HVYYV7H4D-IV/exec',{
+      method:'POST',
+      mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body:JSON.stringify(payload)
+    });
+    notice.textContent='Заявка отправлена. Спасибо! Администратор свяжется с вами.';
+    notice.classList.add('show');
+    bookingForm.reset();
+  }catch(error){
+    notice.textContent='Не удалось отправить заявку. Проверьте подключение к интернету и попробуйте ещё раз.';
+    notice.classList.add('show');
+  }finally{
+    submitButton.disabled=false;
+    submitButton.textContent='Отправить заявку';
+  }
+});
 </script>
 </body>
 </html>
